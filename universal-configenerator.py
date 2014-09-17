@@ -29,10 +29,12 @@ def parse_unknown_arguments(args):
 
 
 def parse_arguments(args=None):
-    
-    parser = argparse.ArgumentParser(prog="Webserver config generator",
-                                     description="Universal configuration generator. "
-                                                 "Parses templates with Mako template engine.")
+
+    parser = argparse.ArgumentParser(prog="universal-configenerator",
+                                     description="Universal config generator. "
+                                                 "Simple CLI interface to Mako template engine with default configuration. "
+                                                 "Allows you to define variables from CLI passing variable as option for command.",
+                                     epilog="Example: %(prog)s --anyopt=anyval /tmpl/file > parsed_file")
 
     parser.add_argument("template_file", action="store", type=str,
                         help="Template file path", )
