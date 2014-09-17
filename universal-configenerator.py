@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-from jinja2 import Template
+from mako.template import Template
 import socket
 import argparse
 
@@ -34,10 +34,7 @@ def parse_arguments(args=None):
                                      description="Webserver configuration generator."
                                                  "Parses templates with Jinja2 template engine.")
 
-    parser.add_argument("--trim", "-t", action="store_false",
-                        help="Trim block's trailing newline. Enabled by default.")
-
-    parser.add_argument("template_file", action="store", type=argparse.FileType('r'),
+    parser.add_argument("template_file", action="store", type=str,
                         help="Template file path", )
 
     known_options, unknown_args = parser.parse_known_args()
@@ -50,7 +47,7 @@ def parse_arguments(args=None):
 def main(args=None):
     options, additional_variables = parse_arguments(args=args)
 
-    template = Template(options.template_file.read(), trim_blocks=options.trim)
+    template = Template(filename=options.template_file, strict_undefined=True)
     template_variables.update(additional_variables)
     print template.render(**template_variables)
 
