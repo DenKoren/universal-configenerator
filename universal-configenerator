@@ -4,15 +4,41 @@ from mako.template import Template
 import socket
 import argparse
 import re
+import os
 import logging
 
-host_fqdn = socket.getfqdn()
-hostname = host_fqdn.split('.')[0]
 
-template_variables = {
-    "fqdn": host_fqdn,
-    "hostname": hostname,
-}
+def define_common_template_variables(known_options, additional_variables):
+    """
+Define common template variables, like hostname, fqdn, template_path, etc.
+    """
+
+    host_fqdn = socket.getfqdn()
+    hostname = host_fqdn.split('.')[0]
+
+    template_path = known_options.template_file
+    abs_template_path = os.path.abspath(template_path)
+    template_dir = os.path.dirname(template_path)
+    abs_template_dir = os.path.dirname(abs_template_path)
+
+    # This is list of predefined variables for templates.
+    return {
+        "fqdn": host_fqdn,  # FQDN of host, where script is executed now.
+        "hostname": hostname,  # its hostname
+        "template_path": template_path,  # Template path as it was given in positional parameter
+        "template_abs_path": abs_template_path,  # Template absolute path
+        "template_dir": template_dir,  # Template directory path as it was given in positional parameter
+        "template_abs_dir": abs_template_dir,  # Template directory absolute path
+    }
+
+
+def define_template_variables(known_options, additional_variables):
+
+    template_variables = define_common_template_variables(known_options=known_options,
+                                                          additional_variables=additional_variables)
+    template_variables.update(additional_variables)
+
+    return template_variables
 
 
 def parse_unknown_arguments(args):
@@ -67,7 +93,9 @@ def main(args=None):
     options, additional_variables = parse_arguments(args=args)
 
     template = Template(filename=options.template_file, strict_undefined=True)
-    template_variables.update(additional_variables)
+
+    template_variables = define_template_variables(known_options=options,
+                                                   additional_variables=additional_variables)
     print template.render(**template_variables)
 
 if __name__ == "__main__":
