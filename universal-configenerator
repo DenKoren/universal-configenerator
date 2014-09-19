@@ -13,7 +13,7 @@ def define_common_template_variables(known_options, additional_variables):
 Define common template variables, like hostname, fqdn, template_path, etc.
     """
 
-    host_fqdn = socket.getfqdn()
+    host_fqdn = socket.getfqdn().strip('.')
     hostname = host_fqdn.split('.')[0]
 
     template_path = known_options.template_file
