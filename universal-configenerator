@@ -13,8 +13,13 @@ def define_common_template_variables(known_options, additional_variables):
 Define common template variables, like hostname, fqdn, template_path, etc.
     """
 
-    host_fqdn = socket.getfqdn().strip('.')
-    hostname = host_fqdn.split('.')[0]
+    fqdn = socket.getfqdn().strip('.')
+    hostname = fqdn.split('.')[0]
+    host_ipv4 = socket.gethostbyname(fqdn)
+    try:
+        host_ipv6 = socket.getaddrinfo(fqdn, 0, socket.AF_INET6)[0][4][0]
+    except socket.gaierror:
+        host_ipv6 = ""
 
     template_path = known_options.template_file
     abs_template_path = os.path.abspath(template_path)
@@ -23,8 +28,10 @@ Define common template variables, like hostname, fqdn, template_path, etc.
 
     # This is list of predefined variables for templates.
     return {
-        "fqdn": host_fqdn,  # FQDN of host, where script is executed now.
+        "fqdn": fqdn,  # FQDN of host, where script is executed now
         "hostname": hostname,  # its hostname
+        "host_ipv4": host_ipv4,  # its IPv4 address
+        "host_ipv6": host_ipv6,  # its IPv6 address
         "template_path": template_path,  # Template path as it was given in positional parameter
         "template_abs_path": abs_template_path,  # Template absolute path
         "template_dir": template_dir,  # Template directory path as it was given in positional parameter
