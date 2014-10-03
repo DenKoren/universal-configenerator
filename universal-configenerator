@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-from mako.template import Template
+from jinja2 import Template
 import socket
 import argparse
 import re
@@ -21,7 +21,7 @@ Define common template variables, like hostname, fqdn, template_path, etc.
     except socket.gaierror:
         host_ipv6 = ""
 
-    template_path = known_options.template_file
+    template_path = known_options.template_file.name
     abs_template_path = os.path.abspath(template_path)
     template_dir = os.path.dirname(template_path)
     abs_template_dir = os.path.dirname(abs_template_path)
@@ -80,10 +80,13 @@ def parse_arguments(args=None):
     parser.add_argument("--debug", "-d", action="store_true",
                         help="Enable debug log messages")
 
-    parser.add_argument("template_file", action="store", type=str,
+    parser.add_argument("--no-trim", action="store_false", dest="trim_blocks",
+                        help="Disable blocks trim on template parsing")
+
+    parser.add_argument("template_file", action="store", type=argparse.FileType('r'),
                         help="Template file path")
 
-    known_options, unknown_args = parser.parse_known_args()
+    known_options, unknown_args = parser.parse_known_args(args=args)
 
     if known_options.debug:
         logging.root.setLevel("DEBUG")
@@ -99,7 +102,7 @@ def parse_arguments(args=None):
 def main(args=None):
     options, additional_variables = parse_arguments(args=args)
 
-    template = Template(filename=options.template_file, strict_undefined=True)
+    template = Template(options.template_file.read(), trim_blocks=options.trim_blocks)
 
     template_variables = define_template_variables(known_options=options,
                                                    additional_variables=additional_variables)
