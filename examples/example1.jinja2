@@ -1,0 +1,13 @@
+Simple template example.
+this is template sample, which uses variable 'custom_option' initialized from CLI with value {{custom_option}}
+{% set some_internal_variable = "simple" %}
+You can define variables in template and use them inside. It is {{ some_internal_variable }}.
+
+Use command:
+    universal-configenerator --custom-option="<any_value>" "{{template_path}}"
+for text generation from template.
+
+You also can try it with --no-trim flag and look for the difference in newlines:
+    universal-configenerator --no-trim --custom-option="<any_value>" "{{template_path}}"
+
+PLEASE, READ 'IMPORTANT' SECTION OF README.md FILE
