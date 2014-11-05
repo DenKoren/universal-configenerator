@@ -3,7 +3,9 @@ understand it's logic.
 This is template sample, which uses value of variable 'custom_option' given from CLI:
     custom_option='{{custom_option}}'
 {% set some_internal_variable = "simple" %}
+{% if True %}
 You can define variables in template and use them inside. It is {{ some_internal_variable }}.
+{% endif %}
 
 Use command:
     universal-configenerator --custom-option="<any_value>" "{{template_path}}"
