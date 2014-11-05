@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 
 from jinja2 import Environment, FileSystemLoader
+import jinja2
 import socket
 import argparse
 import re
@@ -102,7 +103,7 @@ def _define_template_variables(known_options, additional_variables):
 # Custom filters
 #
 # TODO: Define docstring
-def resolve_filter(hostname, addr_types=None):
+def filter_resolve(hostname, addr_types=None):
 
     if not addr_types:
         addr_types = ["IPv4", "IPv6"]
@@ -119,9 +120,24 @@ def resolve_filter(hostname, addr_types=None):
 
     return ips
 
-
 CUSTOM_FILTERS = {
-    'resolve': resolve_filter,
+    'resolve': filter_resolve,
+}
+
+
+#
+# Custom functions
+#
+# TODO: Define docstring
+def function_include_file(name, safe=False):
+    try:
+        return open(name, 'r').read()
+    except IOError:
+        if not safe:
+            raise
+
+CUSTOM_FUNCTIONS = {
+    'include_file': function_include_file,
 }
 
 
@@ -198,7 +214,10 @@ def prepare_environment(known_options, additional_variables):
     # Customize it:
     global_variables = _define_global_variables(known_options=known_options,
                                                 additional_variables=additional_variables)
+
     environment.globals.update(global_variables)
+    environment.globals.update(CUSTOM_FUNCTIONS)
+
     environment.filters.update(CUSTOM_FILTERS)
 
     return environment
