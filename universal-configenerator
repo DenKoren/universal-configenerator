@@ -16,6 +16,7 @@ LOAD_DIRS = ['./',
              '~/.templates',
              '/etc/templates']
 
+
 # ----- #
 # Utils #
 # ----- #
@@ -27,7 +28,8 @@ def _get_host_ips(host, addr_types):
         # TODO: Log action
         return []
 
-    address_list = map(lambda a: a[5][0] if ADDRESS_FAMILY_NAMES[a[0]] in addr_types else None, addr_info)
+    address_list = filter(lambda a: ADDRESS_FAMILY_NAMES[a[0]] in addr_types, addr_info)
+    address_list = map(lambda a: a[4][0], address_list)
     address_list = list(set(address_list))
 
     return address_list
@@ -94,6 +96,30 @@ def _define_template_variables(known_options, additional_variables):
     template_variables.update(additional_variables)
 
     return template_variables
+
+
+#
+# Custom filters
+#
+# TODO: Define docstring
+def resolve_filter(hostname, addr_types="IPv4"):
+
+    if isinstance(hostname, (list, set)):
+        ips = []
+
+        for h in hostname:
+            ips += _get_host_ips(host=h, addr_types=addr_types)
+
+        ips = list(set(ips))
+    else:
+        ips = _get_host_ips(host=hostname, addr_types=addr_types)
+
+    return ips
+
+
+CUSTOM_FILTERS = {
+    'resolve': resolve_filter,
+}
 
 
 # ------------- #
@@ -170,12 +196,14 @@ def prepare_environment(known_options, additional_variables):
     global_variables = _define_global_variables(known_options=known_options,
                                                 additional_variables=additional_variables)
     environment.globals.update(global_variables)
+    environment.filters.update(CUSTOM_FILTERS)
 
     return environment
 
 
 # TODO: Define docstring
 def main(args=None):
+
     options, additional_variables = parse_arguments(args=args)
 
     environment = prepare_environment(known_options=options,

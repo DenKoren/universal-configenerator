@@ -1,0 +1,7 @@
+Simple template example with custom filter usage demonstration.
+
+Custom filter 'resolve' can be used for hostname resolution with IP address family filtration.
+For example, to get IPv4 addresses for 'yandex.ru' host use:
+    {{'{{'}}"yandex.ru"|resolve}}
+and filtration will give you list of IPs:
+    {{"yandex.ru"|resolve}}
