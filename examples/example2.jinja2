@@ -5,3 +5,8 @@ For example, to get IPv4 addresses for 'yandex.ru' host use:
     {{'{{'}}"yandex.ru"|resolve}}
 and filtration will give you list of IPs:
     {{"yandex.ru"|resolve}}
+
+By default, 'resolve' filter returns full list of IPs for given host, but you can make it to filter addresses by family type:
+    {{'{{'}}"yandex.ru"|resolve("IPv4")}}		-> {{"yandex.ru"|resolve("IPv4")}}
+    {{'{{'}}"yandex.ru"|resolve("IPv6")}}		-> {{"yandex.ru"|resolve("IPv6")}}
+    {{'{{'}}"yandex.ru"|resolve(["IPv4", "IPv6"])}}	-> {{"yandex.ru"|resolve(["IPv4", "IPv6"])}}
