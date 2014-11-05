@@ -1,5 +1,7 @@
-Simple template example.
-this is template sample, which uses variable 'custom_option' initialized from CLI with value {{custom_option}}
+Simple template example. Look for the source of '{{template_path}}' file to
+understand it's logic.
+This is template sample, which uses value of variable 'custom_option' given from CLI:
+    custom_option='{{custom_option}}'
 {% set some_internal_variable = "simple" %}
 You can define variables in template and use them inside. It is {{ some_internal_variable }}.
 
