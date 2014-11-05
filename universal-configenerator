@@ -102,7 +102,10 @@ def _define_template_variables(known_options, additional_variables):
 # Custom filters
 #
 # TODO: Define docstring
-def resolve_filter(hostname, addr_types="IPv4"):
+def resolve_filter(hostname, addr_types=None):
+
+    if not addr_types:
+        addr_types = ["IPv4", "IPv6"]
 
     if isinstance(hostname, (list, set)):
         ips = []
