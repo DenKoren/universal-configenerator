@@ -1,30 +1,64 @@
 #!/usr/bin/env python2.7
 
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader
 import socket
 import argparse
 import re
 import os
 import logging
 
+# TODO: Make comments for global variables
+ADDRESS_FAMILY_NAMES = {socket.AF_INET: "IPv4",
+                        socket.AF_INET6: "IPv6"}
 
-def define_common_template_variables(known_options, additional_variables):
-    """
-Define common template variables, like hostname, fqdn, template_path, etc.
-    """
 
+LOAD_DIRS = ['./',
+             '~/.templates',
+             '/etc/templates']
+
+
+# ----- #
+# Utils #
+# ----- #
+# TODO: Define docstring
+def _get_host_ips(host, addr_types):
+    try:
+        addr_info = socket.getaddrinfo(host, 80)
+    except socket.gaierror:
+        # TODO: Log action
+        return []
+
+    address_list = filter(lambda a: ADDRESS_FAMILY_NAMES[a[0]] in addr_types, addr_info)
+    address_list = map(lambda a: a[4][0], address_list)
+    address_list = list(set(address_list))
+
+    return address_list
+
+
+# -------------------- #
+# Template environment #
+# -------------------- #
+
+#
+# Variables definition
+#
+# TODO: Refactor docstring (params)
+def _define_global_variables(known_options, additional_variables):
+    """
+Define common global variables, like hostname, fqdn, etc.
+    """
     fqdn = socket.getfqdn().strip('.')
     hostname = fqdn.split('.')[0]
-    host_ipv4 = socket.gethostbyname(fqdn)
-    try:
-        host_ipv6 = socket.getaddrinfo(fqdn, 0, socket.AF_INET6)[0][4][0]
-    except socket.gaierror:
-        host_ipv6 = ""
 
-    template_path = known_options.template_file.name
-    abs_template_path = os.path.abspath(template_path)
-    template_dir = os.path.dirname(template_path)
-    abs_template_dir = os.path.dirname(abs_template_path)
+    try:
+        host_ipv4 = _get_host_ips(fqdn, "IPv4")[0]
+    except IndexError:
+        host_ipv4 = ""
+
+    try:
+        host_ipv6 = _get_host_ips(fqdn, "IPv6")[0]
+    except IndexError:
+        host_ipv6 = ""
 
     # This is list of predefined variables for templates.
     return {
@@ -32,22 +66,69 @@ Define common template variables, like hostname, fqdn, template_path, etc.
         "hostname": hostname,  # its hostname
         "host_ipv4": host_ipv4,  # its IPv4 address
         "host_ipv6": host_ipv6,  # its IPv6 address
+    }
+
+# TODO: Refactor docstring (params)
+def _define_common_template_variables(known_options, additional_variables):
+    """
+Define common template variables, like <template file name>, <template file path>, etc.
+    """
+    # TODO: rewrite variables definition
+    template_path = known_options.template_file
+    abs_template_path = os.path.abspath(template_path)
+    template_dir = os.path.dirname(template_path)
+    abs_template_dir = os.path.dirname(abs_template_path)
+
+    # This is list of predefined variables for templates.
+    return {
+        "template_name": "",  # Template file name
         "template_path": template_path,  # Template path as it was given in positional parameter
         "template_abs_path": abs_template_path,  # Template absolute path
         "template_dir": template_dir,  # Template directory path as it was given in positional parameter
         "template_abs_dir": abs_template_dir,  # Template directory absolute path
     }
 
+# TODO: Define docstring
+def _define_template_variables(known_options, additional_variables):
 
-def define_template_variables(known_options, additional_variables):
-
-    template_variables = define_common_template_variables(known_options=known_options,
-                                                          additional_variables=additional_variables)
+    template_variables = _define_common_template_variables(known_options=known_options,
+                                                           additional_variables=additional_variables)
     template_variables.update(additional_variables)
 
     return template_variables
 
 
+#
+# Custom filters
+#
+# TODO: Define docstring
+def resolve_filter(hostname, addr_types=None):
+
+    if not addr_types:
+        addr_types = ["IPv4", "IPv6"]
+
+    if isinstance(hostname, (list, set)):
+        ips = []
+
+        for h in hostname:
+            ips += _get_host_ips(host=h, addr_types=addr_types)
+
+        ips = list(set(ips))
+    else:
+        ips = _get_host_ips(host=hostname, addr_types=addr_types)
+
+    return ips
+
+
+CUSTOM_FILTERS = {
+    'resolve': resolve_filter,
+}
+
+
+# ------------- #
+# CLI functions #
+# ------------- #
+# TODO: Define docstring
 def parse_unknown_arguments(args):
     unknown_arguments = {}
 
@@ -68,6 +149,7 @@ def parse_unknown_arguments(args):
     return unknown_arguments
 
 
+# TODO: Define docstring
 def parse_arguments(args=None):
 
     parser = argparse.ArgumentParser(prog="universal-configenerator",
@@ -83,7 +165,7 @@ def parse_arguments(args=None):
     parser.add_argument("--no-trim", action="store_false", dest="trim_blocks",
                         help="Disable blocks trim on template parsing")
 
-    parser.add_argument("template_file", action="store", type=argparse.FileType('r'),
+    parser.add_argument("template_file", action="store", type=str,
                         help="Template file path")
 
     known_options, unknown_args = parser.parse_known_args(args=args)
@@ -99,13 +181,45 @@ def parse_arguments(args=None):
     return known_options, unknown_options
 
 
+def prepare_environment(known_options, additional_variables):
+    # Get template directory path:
+    template_dir = os.path.dirname(known_options.template_file)
+
+    # If template was given with path, add the path to load list.
+    if template_dir:
+        LOAD_DIRS.insert(0, template_dir)
+
+    # Initialize loader to load template from FS.
+    loader = FileSystemLoader(LOAD_DIRS)
+
+    environment = Environment(loader=loader,
+                              trim_blocks=known_options.trim_blocks)
+
+    # Customize it:
+    global_variables = _define_global_variables(known_options=known_options,
+                                                additional_variables=additional_variables)
+    environment.globals.update(global_variables)
+    environment.filters.update(CUSTOM_FILTERS)
+
+    return environment
+
+
+# TODO: Define docstring
 def main(args=None):
+
     options, additional_variables = parse_arguments(args=args)
 
-    template = Template(options.template_file.read(), trim_blocks=options.trim_blocks)
+    environment = prepare_environment(known_options=options,
+                                      additional_variables=additional_variables)
 
-    template_variables = define_template_variables(known_options=options,
-                                                   additional_variables=additional_variables)
+    # Prepare for template parsing:
+    template_variables = _define_template_variables(known_options=options,
+                                                    additional_variables=additional_variables)
+
+    # Load template:
+    template = environment.get_template(os.path.basename(options.template_file))
+
+    # Read and parse template:
     print template.render(**template_variables)
 
 if __name__ == "__main__":
