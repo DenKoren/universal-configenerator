@@ -13,8 +13,7 @@ ADDRESS_FAMILY_NAMES = {socket.AF_INET: "IPv4",
                         socket.AF_INET6: "IPv6"}
 
 
-LOAD_DIRS = ['./',
-             '~/.templates',
+LOAD_DIRS = ['~/.templates',
              '/etc/templates']
 
 
@@ -81,19 +80,25 @@ def _define_common_template_variables(known_options, additional_variables):
     """
 Define common template variables, like <template file name>, <template file path>, etc.
     """
-    # TODO: rewrite variables definition
-    template_path = known_options.template_file
-    abs_template_path = os.path.abspath(template_path)
-    template_dir = os.path.dirname(template_path)
-    abs_template_dir = os.path.dirname(abs_template_path)
+    template_name = os.path.basename(known_options.template_file)
+    template_dir = os.path.dirname(known_options.template_file)
+    if template_dir:
+        template_dir_abs = os.path.abspath(template_dir)
+        template_path = os.path.join(template_dir, template_name)
+        template_path_abs = os.path.join(template_dir_abs, template_name)
+    else:
+        template_dir = Undefined(hint="Template had been imported by name, not by path")
+        template_dir_abs = Undefined(hint="Template had been imported by name, not by path")
+        template_path = Undefined(hint="Template had been imported by name, not by path")
+        template_path_abs = Undefined(hint="Template had been imported by name, not by path")
 
     # This is list of predefined variables for templates.
     return {
-        "template_name": "",  # Template file name
+        "template_name": template_name,  # Template file name
         "template_path": template_path,  # Template path as it was given in positional parameter
-        "template_abs_path": abs_template_path,  # Template absolute path
+        "template_path_abs": template_path_abs,  # Absolute template file path
         "template_dir": template_dir,  # Template directory path as it was given in positional parameter
-        "template_abs_dir": abs_template_dir,  # Template directory absolute path
+        "template_dir_abs": template_dir_abs,  # Template directory absolute path
     }
 
 # TODO: Define docstring
