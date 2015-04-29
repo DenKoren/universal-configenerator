@@ -13,6 +13,7 @@ ADDRESS_FAMILY_NAMES = {socket.AF_INET: "IPv4",
                         socket.AF_INET6: "IPv6"}
 
 
+# To load templates from current dir just give the sctrip './template.tmpl' instead of 'template.tmpl'
 LOAD_DIRS = ['~/.templates',
              '/etc/templates']
 
@@ -75,6 +76,7 @@ Define common global variables, like hostname, fqdn, etc.
         "host_ipv6": host_ipv6,  # its IPv6 address
     }
 
+
 # TODO: Refactor docstring (params)
 def _define_common_template_variables(known_options, additional_variables):
     """
@@ -99,6 +101,7 @@ Define common template variables, like <template file name>, <template file path
         "template_dir": template_dir,  # Template directory path as it was given in positional parameter
         "template_dir_abs": template_dir_abs,  # Template directory absolute path
     }
+
 
 # TODO: Define docstring
 def _define_template_variables(known_options, additional_variables):
